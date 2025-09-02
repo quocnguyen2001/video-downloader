@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./infra/.env
+    volumes:
+      - ./backend/storage:/var/www/html/storage
+    depends_on:
+      - mysql
+    networks:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - app
+
+networks:
+  app:
+
+volumes:
+  dbdata:

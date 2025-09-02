@@ -28,15 +28,8 @@
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest",
-      "prettier"
-    ],
-    "plugins": [
-      "prettier"
-    ],
-    "rules": {
-      "prettier/prettier": "warn"
-    }
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [

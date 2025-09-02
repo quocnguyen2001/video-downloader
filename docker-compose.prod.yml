@@ -1,7 +1,43 @@
 services:
+  # Backend nginx - serves Laravel admin panel and API
+  backend-nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80" # Backend domain port (use 80 for production)
+    volumes:
+      - ./docker/nginx/backend.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/public:/var/www/html/public:ro
+    depends_on:
+      - backend
+    networks:
+      - app
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=${BACKEND_DOMAIN:-backend.com}
+      - NGINX_PORT=80
+
+  # Frontend nginx - serves React application
+  frontend-nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80" # Frontend domain port
+    volumes:
+      - ./docker/nginx/frontend.conf:/etc/nginx/conf.d/default.conf:ro
+      - frontend-build:/usr/share/nginx/html:ro
+    depends_on:
+      - frontend
+    networks:
+      - app
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=${FRONTEND_DOMAIN:-frontend.com}
+      - NGINX_PORT=80
+
+  # Laravel backend service
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile.backend
     env_file:
       - ./infra/.env
     volumes:
@@ -10,6 +46,21 @@ services:
       - mysql
     networks:
       - app
+    restart: unless-stopped
+    environment:
+      - APP_URL=https://${BACKEND_DOMAIN:-backend.com}
+
+  # React frontend build service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    volumes:
+      - frontend-build:/app/build
+    networks:
+      - app
+    environment:
+      - REACT_APP_BACKEND_API_URL=https://${BACKEND_DOMAIN:-backend.com}/api/v1
 
   mysql:
     image: mysql:8.0
@@ -19,8 +70,6 @@ services:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
     volumes:
       - dbdata:/var/lib/mysql
     networks:
@@ -29,5 +78,7 @@ services:
 networks:
   app:
 
+
 volumes:
   dbdata:
+  frontend-build:

@@ -1,0 +1,6 @@
+.env
+.env.local
+.env.domains
+.env.domains.local
+./.idea
+.serena/*
